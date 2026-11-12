@@ -1,0 +1,8 @@
+{
+  "appId": "com.orbitrun.game",
+  "appName": "Orbit Run",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}
