@@ -1,0 +1,1606 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#070b19">
+<title>ORBIT RUN</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #070b19;
+    color: white;
+    font-family: Arial, sans-serif;
+    touch-action: none;
+}
+
+#app {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: #070b19;
+}
+
+canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.hud {
+    position: absolute;
+    top: max(14px, env(safe-area-inset-top));
+    left: 15px;
+    right: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 3;
+    pointer-events: none;
+}
+
+.logo {
+    font-size: 20px;
+    font-weight: 900;
+    letter-spacing: 2px;
+}
+
+.logo span {
+    color: #28dfff;
+}
+
+.readouts {
+    display: flex;
+    gap: 14px;
+    margin-top: 8px;
+}
+
+.readouts div {
+    font-size: 10px;
+    color: #8d9bb9;
+}
+
+.readouts strong {
+    display: block;
+    color: white;
+    font-size: 14px;
+    margin-top: 3px;
+}
+
+.right-hud {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.score-box {
+    text-align: right;
+}
+
+.score-box small {
+    display: block;
+    font-size: 9px;
+    color: #8d9bb9;
+    letter-spacing: 1px;
+}
+
+.score-box strong {
+    font-size: 20px;
+    color: #36ddff;
+    font-variant-numeric: tabular-nums;
+}
+
+#pauseBtn {
+    width: 42px;
+    height: 42px;
+    background: #17223b;
+    color: white;
+    border: 1px solid #314469;
+    border-radius: 12px;
+    font-size: 19px;
+    pointer-events: auto;
+}
+
+#pauseBtn:disabled {
+    opacity: 0.35;
+}
+
+.controls {
+    position: absolute;
+    bottom: max(16px, env(safe-area-inset-bottom));
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 22px;
+    z-index: 4;
+    pointer-events: none;
+    transition: opacity 0.2s;
+}
+
+.controls.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.touch-btn {
+    width: 75px;
+    height: 66px;
+    border-radius: 19px;
+    background: rgba(24, 42, 72, 0.88);
+    border: 1px solid #43628d;
+    color: #50dfff;
+    font-size: 30px;
+    font-weight: bold;
+    pointer-events: auto;
+    touch-action: none;
+    box-shadow: 0 5px 20px #0008;
+}
+
+.touch-btn:active {
+    background: #1d6880;
+    transform: scale(0.95);
+}
+
+.touch-label {
+    display: block;
+    font-size: 9px;
+    letter-spacing: 1px;
+    margin-top: 2px;
+}
+
+.overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background: rgba(3, 7, 19, 0.72);
+    backdrop-filter: blur(7px);
+    z-index: 5;
+}
+
+.overlay.hidden {
+    display: none;
+}
+
+.panel {
+    width: 100%;
+    max-width: 390px;
+    background: linear-gradient(145deg, #172744, #0b1124);
+    border: 1px solid #355477;
+    border-radius: 25px;
+    padding: 30px 23px;
+    text-align: center;
+    box-shadow: 0 15px 70px #0009;
+}
+
+.eyebrow {
+    color: #35ddff;
+    font-size: 11px;
+    letter-spacing: 4px;
+    font-weight: bold;
+    margin-bottom: 12px;
+}
+
+.panel h1 {
+    font-size: clamp(35px, 10vw, 52px);
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-shadow: 0 0 25px #12bde899;
+}
+
+.panel p {
+    color: #a6b6ce;
+    font-size: 13px;
+    line-height: 1.7;
+    margin: 15px 0 22px;
+}
+
+.panel-stats {
+    display: flex;
+    justify-content: center;
+    gap: 35px;
+    padding: 17px;
+    margin-bottom: 20px;
+    background: #101a30;
+    border-radius: 15px;
+}
+
+.panel-stats strong {
+    display: block;
+    color: #35ddff;
+    font-size: 23px;
+}
+
+.panel-stats small {
+    color: #8395b3;
+    font-size: 9px;
+    letter-spacing: 1px;
+}
+
+.primary-btn {
+    width: 100%;
+    padding: 17px;
+    border: none;
+    border-radius: 13px;
+    background: linear-gradient(90deg, #10a9d1, #306bff);
+    color: white;
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    box-shadow: 0 5px 25px #139ce944;
+}
+
+.primary-btn:active {
+    transform: scale(0.97);
+}
+
+.footer-note {
+    color: #657b9c;
+    font-size: 10px;
+    margin-top: 18px;
+}
+
+@media (max-height: 420px) {
+    .panel {
+        padding: 17px;
+        max-width: 350px;
+    }
+
+    .panel p {
+        margin: 8px 0 12px;
+    }
+
+    .panel-stats {
+        padding: 9px;
+        margin-bottom: 12px;
+    }
+
+    .primary-btn {
+        padding: 12px;
+    }
+
+    .touch-btn {
+        height: 55px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div id="app">
+
+    <canvas id="gameCanvas"></canvas>
+
+    <div class="hud">
+
+        <div>
+            <div class="logo">ORBIT<span>RUN</span></div>
+
+            <div class="readouts">
+                <div>
+                    CORE
+                    <strong id="hpText">3</strong>
+                </div>
+
+                <div>
+                    SHIELD
+                    <strong id="shieldText">OFF</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-hud">
+
+            <div class="score-box">
+                <small>SCORE</small>
+                <strong id="scoreText">00000</strong>
+            </div>
+
+            <button id="pauseBtn" disabled>Ⅱ</button>
+
+        </div>
+    </div>
+
+    <div class="controls hidden" id="controls">
+
+        <button class="touch-btn" id="leftBtn">
+            ◀
+            <span class="touch-label">LEFT</span>
+        </button>
+
+        <button class="touch-btn" id="rightBtn">
+            ▶
+            <span class="touch-label">RIGHT</span>
+        </button>
+
+    </div>
+
+    <div class="overlay" id="overlay">
+
+        <div class="panel">
+
+            <div class="eyebrow">ARCADE SURVIVAL</div>
+
+            <h1 id="overlayTitle">ORBIT RUN</h1>
+
+            <p id="overlayDesc">
+                Bertahan selama mungkin di luar angkasa.
+                Hindari meteor dan kumpulkan orb energi
+                untuk mendapatkan perlindungan.
+            </p>
+
+            <div class="panel-stats">
+
+                <div>
+                    <strong id="bestScore">0</strong>
+                    <small>BEST SCORE</small>
+                </div>
+
+                <div>
+                    <strong>3</strong>
+                    <small>CORE</small>
+                </div>
+
+            </div>
+
+            <button class="primary-btn" id="mainBtn">
+                START GAME
+            </button>
+
+            <div class="footer-note">
+                Gunakan tombol kiri dan kanan untuk bergerak
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+"use strict";
+
+// ======================================
+// ORBIT RUN - GAME ENGINE
+// ======================================
+
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+const $ = (id) => document.getElementById(id);
+
+const scoreText = $("scoreText");
+const hpText = $("hpText");
+const shieldText = $("shieldText");
+const bestScoreText = $("bestScore");
+
+const overlay = $("overlay");
+const controls = $("controls");
+const pauseBtn = $("pauseBtn");
+const mainBtn = $("mainBtn");
+
+let width = window.innerWidth;
+let height = window.innerHeight;
+let dpr = 1;
+
+let mode = "menu";
+
+let score = 0;
+let bestScore = 0;
+let elapsed = 0;
+
+let player = null;
+
+let meteors = [];
+let orbs = [];
+let particles = [];
+let stars = [];
+
+let meteorTimer = 0;
+let orbTimer = 0;
+let hudTimer = 0;
+
+const input = {
+    left: false,
+    right: false
+};
+
+// ======================================
+// LOCAL STORAGE
+// ======================================
+
+try {
+    bestScore = Number(
+        localStorage.getItem("orbitRunBest") || 0
+    );
+} catch (error) {
+    bestScore = 0;
+}
+
+// ======================================
+// SCREEN RESOLUTION
+// ======================================
+
+function resize() {
+
+    width = window.innerWidth;
+    height = window.innerHeight;
+
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    canvas.width = Math.floor(width * dpr);
+    canvas.height = Math.floor(height * dpr);
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    createStars();
+
+    if (player) {
+        player.x = Math.max(
+            player.r,
+            Math.min(width - player.r, player.x)
+        );
+
+        player.y = height - 125;
+    }
+}
+
+function createStars() {
+
+    stars = [];
+
+    const count = Math.min(
+        120,
+        Math.max(55, Math.floor(width * height / 7000))
+    );
+
+    for (let i = 0; i < count; i++) {
+
+        stars.push({
+
+            x: Math.random() * width,
+            y: Math.random() * height,
+
+            size: Math.random() * 2 + 0.5,
+
+            speed: Math.random() * 45 + 15,
+
+            alpha: Math.random() * 0.7 + 0.2
+
+        });
+    }
+}
+
+// ======================================
+// PLAYER
+// ======================================
+
+function createPlayer() {
+
+    player = {
+
+        x: width / 2,
+
+        y: height - 125,
+
+        r: 15,
+
+        speed: 390,
+
+        hp: 3,
+
+        shield: 0,
+
+        invuln: 0,
+
+        vx: 0
+
+    };
+}
+
+// ======================================
+// RESET GAME
+// ======================================
+
+function resetGame() {
+
+    score = 0;
+    elapsed = 0;
+
+    meteors = [];
+    orbs = [];
+    particles = [];
+
+    meteorTimer = 0.5;
+    orbTimer = 4;
+
+    hudTimer = 0;
+
+    input.left = false;
+    input.right = false;
+
+    createPlayer();
+
+    updateHUD();
+}
+
+// ======================================
+// OVERLAY
+// ======================================
+
+function showOverlay(title, description, buttonText) {
+
+    $("overlayTitle").textContent = title;
+
+    $("overlayDesc").textContent = description;
+
+    mainBtn.textContent = buttonText;
+
+    $("bestScore").textContent = bestScore;
+
+    overlay.classList.remove("hidden");
+}
+
+function hideOverlay() {
+
+    overlay.classList.add("hidden");
+}
+
+// ======================================
+// START / PAUSE / RESUME
+// ======================================
+
+function startGame() {
+
+    resetGame();
+
+    mode = "playing";
+
+    hideOverlay();
+
+    controls.classList.remove("hidden");
+
+    pauseBtn.disabled = false;
+    pauseBtn.textContent = "Ⅱ";
+}
+
+function pauseGame() {
+
+    if (mode !== "playing") return;
+
+    mode = "paused";
+
+    input.left = false;
+    input.right = false;
+
+    controls.classList.add("hidden");
+
+    pauseBtn.textContent = "▶";
+
+    showOverlay(
+        "PAUSED",
+        "Permainan sedang dijeda. Tekan tombol untuk melanjutkan.",
+        "LANJUTKAN"
+    );
+}
+
+function resumeGame() {
+
+    if (mode !== "paused") return;
+
+    mode = "playing";
+
+    hideOverlay();
+
+    controls.classList.remove("hidden");
+
+    pauseBtn.textContent = "Ⅱ";
+}
+
+function finishGame() {
+
+    mode = "over";
+
+    input.left = false;
+    input.right = false;
+
+    controls.classList.add("hidden");
+
+    pauseBtn.disabled = true;
+
+    const finalScore = Math.floor(score);
+
+    if (finalScore > bestScore) {
+
+        bestScore = finalScore;
+
+        try {
+            localStorage.setItem(
+                "orbitRunBest",
+                String(bestScore)
+            );
+        } catch (error) {
+            // Game tetap berjalan jika storage tidak tersedia.
+        }
+    }
+
+    updateHUD();
+
+    showOverlay(
+        "GAME OVER",
+        "Perjalanan selesai. Skor kamu: " + finalScore,
+        "PLAY AGAIN"
+    );
+}
+
+// ======================================
+// BUTTON EVENTS
+// ======================================
+
+mainBtn.addEventListener("click", () => {
+
+    if (mode === "paused") {
+
+        resumeGame();
+
+    } else {
+
+        startGame();
+
+    }
+
+});
+
+pauseBtn.addEventListener("click", () => {
+
+    if (mode === "playing") {
+
+        pauseGame();
+
+    } else if (mode === "paused") {
+
+        resumeGame();
+
+    }
+
+});
+
+// ======================================
+// TOUCH CONTROLS
+// ======================================
+
+function addTouchControl(buttonId, direction) {
+
+    const button = $(buttonId);
+
+    button.addEventListener("pointerdown", (event) => {
+
+        event.preventDefault();
+
+        input[direction] = true;
+
+        try {
+            button.setPointerCapture(event.pointerId);
+        } catch (error) {
+            // Pointer capture tidak wajib.
+        }
+
+    });
+
+    button.addEventListener("pointerup", () => {
+
+        input[direction] = false;
+
+    });
+
+    button.addEventListener("pointercancel", () => {
+
+        input[direction] = false;
+
+    });
+
+}
+
+addTouchControl("leftBtn", "left");
+addTouchControl("rightBtn", "right");
+
+window.addEventListener("pointerup", () => {
+
+    input.left = false;
+    input.right = false;
+
+});
+
+window.addEventListener("blur", () => {
+
+    input.left = false;
+    input.right = false;
+
+});
+
+// ======================================
+// KEYBOARD CONTROLS
+// ======================================
+
+window.addEventListener("keydown", (event) => {
+
+    if (
+        event.key === "ArrowLeft" ||
+        event.key.toLowerCase() === "a"
+    ) {
+
+        input.left = true;
+        event.preventDefault();
+
+    }
+
+    if (
+        event.key === "ArrowRight" ||
+        event.key.toLowerCase() === "d"
+    ) {
+
+        input.right = true;
+        event.preventDefault();
+
+    }
+
+    if (event.code === "Space") {
+
+        event.preventDefault();
+
+        if (mode === "playing") {
+
+            pauseGame();
+
+        } else if (mode === "paused") {
+
+            resumeGame();
+
+        } else {
+
+            startGame();
+
+        }
+
+    }
+
+    if (event.key === "Enter" && mode === "menu") {
+
+        startGame();
+
+    }
+
+});
+
+window.addEventListener("keyup", (event) => {
+
+    if (
+        event.key === "ArrowLeft" ||
+        event.key.toLowerCase() === "a"
+    ) {
+
+        input.left = false;
+
+    }
+
+    if (
+        event.key === "ArrowRight" ||
+        event.key.toLowerCase() === "d"
+    ) {
+
+        input.right = false;
+
+    }
+
+});
+
+// ======================================
+// METEOR GENERATOR
+// ======================================
+
+function spawnMeteor() {
+
+    const radius = 13 + Math.random() * 15;
+
+    meteors.push({
+
+        x: radius + Math.random() * (width - radius * 2),
+
+        y: -radius - 5,
+
+        r: radius,
+
+        speed: 155 + Math.random() * 100 + elapsed * 1.7,
+
+        dx: (Math.random() - 0.5) * 75,
+
+        angle: Math.random() * Math.PI * 2,
+
+        spin: (Math.random() - 0.5) * 2,
+
+        seed: Math.random() * 100,
+
+        dead: false
+
+    });
+
+}
+
+// ======================================
+// ORB GENERATOR
+// ======================================
+
+function spawnOrb() {
+
+    orbs.push({
+
+        x: 25 + Math.random() * Math.max(1, width - 50),
+
+        y: -25,
+
+        r: 11,
+
+        speed: 125 + Math.random() * 35,
+
+        phase: Math.random() * 6,
+
+        dead: false
+
+    });
+
+}
+
+// ======================================
+// PARTICLES
+// ======================================
+
+function createParticles(x, y, amount, color) {
+
+    for (let i = 0; i < amount; i++) {
+
+        const angle = Math.random() * Math.PI * 2;
+
+        const speed = 35 + Math.random() * 150;
+
+        particles.push({
+
+            x: x,
+
+            y: y,
+
+            vx: Math.cos(angle) * speed,
+
+            vy: Math.sin(angle) * speed,
+
+            life: 0.3 + Math.random() * 0.5,
+
+            maxLife: 0.8,
+
+            size: 2 + Math.random() * 4,
+
+            color: color
+
+        });
+
+    }
+
+}
+
+// ======================================
+// COLLISION DETECTION
+// ======================================
+
+function collision(a, b) {
+
+    const dx = a.x - b.x;
+    const dy = a.y - b.y;
+
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    return distance < a.r + b.r;
+
+}
+
+// ======================================
+// HUD UPDATE
+// ======================================
+
+function updateHUD() {
+
+    scoreText.textContent = Math.floor(score)
+        .toString()
+        .padStart(5, "0");
+
+    bestScoreText.textContent = bestScore;
+
+    hpText.textContent = player ? player.hp : 3;
+
+    shieldText.textContent =
+        player && player.shield > 0
+            ? player.shield.toFixed(1) + "s"
+            : "OFF";
+
+}
+
+// ======================================
+// GAME UPDATE
+// ======================================
+
+function update(dt) {
+
+    if (mode !== "playing" || !player) return;
+
+    elapsed += dt;
+
+    score += dt * 10;
+
+    // PLAYER MOVEMENT
+
+    let direction = 0;
+
+    if (input.left) direction--;
+    if (input.right) direction++;
+
+    player.vx = direction * player.speed;
+
+    player.x += player.vx * dt;
+
+    player.x = Math.max(
+        player.r + 5,
+        Math.min(width - player.r - 5, player.x)
+    );
+
+    player.invuln = Math.max(0, player.invuln - dt);
+
+    player.shield = Math.max(0, player.shield - dt);
+
+    // METEOR SPAWNING
+
+    meteorTimer -= dt;
+
+    if (meteorTimer <= 0) {
+
+        spawnMeteor();
+
+        meteorTimer =
+            Math.max(0.32, 0.95 - elapsed * 0.006) *
+            (0.75 + Math.random() * 0.45);
+
+    }
+
+    // ORB SPAWNING
+
+    orbTimer -= dt;
+
+    if (orbTimer <= 0) {
+
+        spawnOrb();
+
+        orbTimer = 6 + Math.random() * 4;
+
+    }
+
+    // METEOR MOVEMENT
+
+    for (const meteor of meteors) {
+
+        meteor.y += meteor.speed * dt;
+
+        meteor.x += meteor.dx * dt;
+
+        meteor.angle += meteor.spin * dt;
+
+        if (meteor.x < meteor.r || meteor.x > width - meteor.r) {
+
+            meteor.dx *= -1;
+
+        }
+
+        // COLLISION WITH PLAYER
+
+        if (
+            !meteor.dead &&
+            collision(player, {
+                x: meteor.x,
+                y: meteor.y,
+                r: meteor.r * 0.82
+            })
+        ) {
+
+            if (player.invuln <= 0) {
+
+                meteor.dead = true;
+
+                if (player.shield > 0) {
+
+                    createParticles(
+                        meteor.x,
+                        meteor.y,
+                        14,
+                        "#35eaff"
+                    );
+
+                } else {
+
+                    player.hp--;
+
+                    player.invuln = 1.25;
+
+                    createParticles(
+                        player.x,
+                        player.y,
+                        16,
+                        "#ff9167"
+                    );
+
+                    if (player.hp <= 0) {
+
+                        updateHUD();
+                        finishGame();
+                        return;
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    }
+
+    meteors = meteors.filter((meteor) => {
+
+        return !meteor.dead && meteor.y < height + meteor.r + 10;
+
+    });
+
+    // ORB MOVEMENT
+
+    for (const orb of orbs) {
+
+        orb.y += orb.speed * dt;
+
+        orb.phase += dt * 4;
+
+        if (!orb.dead && collision(player, orb)) {
+
+            orb.dead = true;
+
+            score += 60;
+
+            player.shield = 5;
+
+            createParticles(
+                orb.x,
+                orb.y,
+                20,
+                "#27eaff"
+            );
+
+        }
+
+    }
+
+    orbs = orbs.filter((orb) => {
+
+        return !orb.dead && orb.y < height + 30;
+
+    });
+
+    // PARTICLES
+
+    for (const particle of particles) {
+
+        particle.x += particle.vx * dt;
+
+        particle.y += particle.vy * dt;
+
+        particle.life -= dt;
+
+        particle.vx *= 0.97;
+
+        particle.vy *= 0.97;
+
+    }
+
+    particles = particles.filter((particle) => {
+
+        return particle.life > 0;
+
+    });
+
+    // BACKGROUND STARS
+
+    for (const star of stars) {
+
+        star.y += star.speed * dt;
+
+        if (star.y > height) {
+
+            star.y = -3;
+
+            star.x = Math.random() * width;
+
+        }
+
+    }
+
+    // HUD REFRESH
+
+    hudTimer += dt;
+
+    if (hudTimer > 0.1) {
+
+        updateHUD();
+
+        hudTimer = 0;
+
+    }
+
+}
+
+// ======================================
+// DRAW BACKGROUND
+// ======================================
+
+function drawBackground() {
+
+    const gradient = ctx.createLinearGradient(
+        0,
+        0,
+        0,
+        height
+    );
+
+    gradient.addColorStop(0, "#080e23");
+    gradient.addColorStop(1, "#101b35");
+
+    ctx.fillStyle = gradient;
+
+    ctx.fillRect(0, 0, width, height);
+
+    // STARS
+
+    for (const star of stars) {
+
+        ctx.globalAlpha = star.alpha;
+
+        ctx.fillStyle = "#c5eaff";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            star.x,
+            star.y,
+            star.size,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.fill();
+
+    }
+
+    ctx.globalAlpha = 1;
+
+}
+
+// ======================================
+// DRAW METEOR
+// ======================================
+
+function drawMeteor(meteor) {
+
+    ctx.save();
+
+    ctx.translate(meteor.x, meteor.y);
+
+    ctx.rotate(meteor.angle);
+
+    ctx.shadowColor = "#e66b42";
+
+    ctx.shadowBlur = 13;
+
+    const gradient = ctx.createLinearGradient(
+        -meteor.r,
+        -meteor.r,
+        meteor.r,
+        meteor.r
+    );
+
+    gradient.addColorStop(0, "#ffb16c");
+    gradient.addColorStop(1, "#713c42");
+
+    ctx.beginPath();
+
+    for (let i = 0; i < 10; i++) {
+
+        const angle = (i / 10) * Math.PI * 2;
+
+        const radius =
+            meteor.r *
+            (0.83 + 0.17 * Math.sin(i * 3.8 + meteor.seed));
+
+        const x = Math.cos(angle) * radius;
+
+        const y = Math.sin(angle) * radius;
+
+        if (i === 0) {
+
+            ctx.moveTo(x, y);
+
+        } else {
+
+            ctx.lineTo(x, y);
+
+        }
+
+    }
+
+    ctx.closePath();
+
+    ctx.fillStyle = gradient;
+
+    ctx.fill();
+
+    ctx.strokeStyle = "#ffbd8b";
+
+    ctx.lineWidth = 1.2;
+
+    ctx.stroke();
+
+    // METEOR CRATERS
+
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = "#633c43";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        -meteor.r * 0.25,
+        -meteor.r * 0.15,
+        meteor.r * 0.18,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+    ctx.beginPath();
+
+    ctx.arc(
+        meteor.r * 0.3,
+        meteor.r * 0.28,
+        meteor.r * 0.12,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+    ctx.restore();
+
+}
+
+// ======================================
+// DRAW ORB
+// ======================================
+
+function drawOrb(orb) {
+
+    const pulse = Math.sin(orb.phase) * 2;
+
+    ctx.save();
+
+    ctx.shadowColor = "#23eaff";
+
+    ctx.shadowBlur = 25;
+
+    ctx.beginPath();
+
+    ctx.arc(
+        orb.x,
+        orb.y,
+        orb.r + pulse,
+        0,
+        Math.PI * 2
+    );
+
+    const gradient = ctx.createRadialGradient(
+        orb.x - 3,
+        orb.y - 3,
+        1,
+        orb.x,
+        orb.y,
+        orb.r + 5
+    );
+
+    gradient.addColorStop(0, "#ffffff");
+    gradient.addColorStop(0.4, "#73f5ff");
+    gradient.addColorStop(1, "#0c88de");
+
+    ctx.fillStyle = gradient;
+
+    ctx.fill();
+
+    ctx.restore();
+
+}
+
+// ======================================
+// DRAW PLAYER
+// ======================================
+
+function drawPlayer() {
+
+    if (!player) return;
+
+    if (
+        player.invuln > 0 &&
+        Math.floor(performance.now() / 100) % 2 === 0
+    ) {
+
+        return;
+
+    }
+
+    ctx.save();
+
+    ctx.translate(player.x, player.y);
+
+    ctx.rotate(player.vx * 0.00055);
+
+    // ENERGY TRAIL
+
+    ctx.shadowColor = "#23dfff";
+
+    ctx.shadowBlur = 20;
+
+    ctx.fillStyle = "#19bce9";
+
+    ctx.beginPath();
+
+    ctx.moveTo(-5, 10);
+    ctx.lineTo(0, 30 + Math.random() * 9);
+    ctx.lineTo(5, 10);
+
+    ctx.closePath();
+
+    ctx.fill();
+
+    // SHIP BODY
+
+    const gradient = ctx.createLinearGradient(
+        -15,
+        -20,
+        15,
+        20
+    );
+
+    gradient.addColorStop(0, "#f9ffff");
+    gradient.addColorStop(0.5, "#56dfff");
+    gradient.addColorStop(1, "#1972c3");
+
+    ctx.fillStyle = gradient;
+
+    ctx.beginPath();
+
+    ctx.moveTo(0, -24);
+
+    ctx.lineTo(15, 15);
+
+    ctx.lineTo(0, 9);
+
+    ctx.lineTo(-15, 15);
+
+    ctx.closePath();
+
+    ctx.fill();
+
+    ctx.strokeStyle = "#bafaff";
+
+    ctx.lineWidth = 1.5;
+
+    ctx.stroke();
+
+    // COCKPIT
+
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = "#113c75";
+
+    ctx.beginPath();
+
+    ctx.ellipse(
+        0,
+        -4,
+        4.5,
+        8,
+        0,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+    ctx.restore();
+
+    // SHIELD RING
+
+    if (player.shield > 0) {
+
+        ctx.save();
+
+        ctx.strokeStyle = "rgba(41, 225, 255, 0.85)";
+
+        ctx.lineWidth = 3;
+
+        ctx.shadowColor = "#23dfff";
+
+        ctx.shadowBlur = 18;
+
+        ctx.beginPath();
+
+        ctx.arc(
+            player.x,
+            player.y,
+            29 + Math.sin(performance.now() / 100) * 2,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.stroke();
+
+        ctx.restore();
+
+    }
+
+}
+
+// ======================================
+// DRAW PARTICLES
+// ======================================
+
+function drawParticles() {
+
+    for (const particle of particles) {
+
+        ctx.save();
+
+        ctx.globalAlpha = Math.max(
+            0,
+            particle.life / particle.maxLife
+        );
+
+        ctx.fillStyle = particle.color;
+
+        ctx.shadowColor = particle.color;
+
+        ctx.shadowBlur = 10;
+
+        ctx.beginPath();
+
+        ctx.arc(
+            particle.x,
+            particle.y,
+            particle.size,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.fill();
+
+        ctx.restore();
+
+    }
+
+}
+
+// ======================================
+// MAIN RENDER
+// ======================================
+
+function render() {
+
+    drawBackground();
+
+    for (const meteor of meteors) {
+
+        drawMeteor(meteor);
+
+    }
+
+    for (const orb of orbs) {
+
+        drawOrb(orb);
+
+    }
+
+    drawParticles();
+
+    drawPlayer();
+
+}
+
+// ======================================
+// GAME LOOP
+// ======================================
+
+let lastTime = 0;
+
+function gameLoop(timestamp) {
+
+    if (!lastTime) {
+
+        lastTime = timestamp;
+
+    }
+
+    const dt = Math.min(
+        (timestamp - lastTime) / 1000,
+        0.033
+    );
+
+    lastTime = timestamp;
+
+    update(dt);
+
+    render();
+
+    requestAnimationFrame(gameLoop);
+
+}
+
+// ======================================
+// APP LIFECYCLE
+// ======================================
+
+document.addEventListener("visibilitychange", () => {
+
+    if (document.hidden && mode === "playing") {
+
+        pauseGame();
+
+    }
+
+});
+
+window.addEventListener("resize", resize);
+
+document.addEventListener("contextmenu", (event) => {
+
+    event.preventDefault();
+
+});
+
+// ======================================
+// INITIALIZATION
+// ======================================
+
+resize();
+
+updateHUD();
+
+requestAnimationFrame(gameLoop);
+
+</script>
+
+</body>
+</html>
