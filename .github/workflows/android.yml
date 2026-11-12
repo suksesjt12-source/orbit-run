@@ -1,3 +1,4 @@
+
 name: Build Orbit Run APK
 
 on:
@@ -5,7 +6,6 @@ on:
     branches:
       - main
       - master
-
   workflow_dispatch:
 
 permissions:
@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download Repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Setup Node.js
@@ -33,13 +33,14 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
 
       - name: Install Android SDK Packages
         run: |
           sdkmanager --install \
             "platforms;android-36" \
-            "build-tools;36.0.0" \
-            "platform-tools"
+            "build-tools;36.0.0"
 
       - name: Install Dependencies
         run: npm install --no-audit --no-fund
